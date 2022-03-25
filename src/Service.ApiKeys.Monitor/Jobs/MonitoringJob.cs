@@ -9,6 +9,7 @@ using Polly.Retry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 
@@ -55,7 +56,6 @@ namespace Service.ApiKeys.Monitor.Jobs
                     var encryptionKeyGrpcService = factory.GetEncryptionKeyGrpcService();
                     var isApiKeySet = false;
                     var isEncryptionKeySet = false;
-                    var expectedEncryptionKeys = new HashSet<string>();
 
                     await _retryPolicy.ExecuteAsync(async () =>
                     {
@@ -68,7 +68,7 @@ namespace Service.ApiKeys.Monitor.Jobs
                     {
                         var encryptionKeys = await encryptionKeyGrpcService.GetEncryptionKeyIdsAsync(new MyJetWallet.ApiSecurityManager.Grpc.Models.GetEncryptionKeyIdsRequest());
 
-                        isEncryptionKeySet = encryptionKeys?.Ids.Any(x => x == item.ApiKey.EncryptionKeyId) ?? false;
+                        isEncryptionKeySet = encryptionKeys?.Ids?.Any(x => x == item.ApiKey.EncryptionKeyId) ?? false;
                     });
 
                     _logger.LogInformation("Checking for: {item}, isApiKeySet: {isApiKeySet}, isEncryptionKeySet: {isEncryptionKeySet}", 
@@ -77,7 +77,7 @@ namespace Service.ApiKeys.Monitor.Jobs
                     if (isApiKeySet && !isEncryptionKeySet)
                         await _telegramBotClient
                             .SendTextMessageAsync(Program.Settings.TelegramChatId,
-                            $"ENCRYPTION KEY {item.ApiKey.EncryptionKeyId} FOR APIKEY {item.ApiKey.ApiKeyId} IS NOT SET FOR {item.ApiKey.ApplicationName}, TEAM COME ON! AdminPanel, SecurityTab!");
+                            $"ENCRYPTION KEY {item.ApiKey.EncryptionKeyId} FOR APIKEY {item.ApiKey.ApiKeyId} IS NOT SET FOR {item.ApiKey.ApplicationName}, TEAM COME ON! AdminPanel, Security!");
                 }
             }
             catch (Exception e)
