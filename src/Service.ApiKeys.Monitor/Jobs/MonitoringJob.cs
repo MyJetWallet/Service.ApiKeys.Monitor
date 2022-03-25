@@ -61,7 +61,7 @@ namespace Service.ApiKeys.Monitor.Jobs
                     {
                         var apiKeys = await apiKeyClient.GetApiKeyIdsAsync(new MyJetWallet.ApiSecurityManager.Grpc.Models.GetApiKeyIdsRequest());
 
-                        isApiKeySet = apiKeys?.Ids.Any(x => x == item.ApiKey.ApiKeyId) ?? false;
+                        isApiKeySet = apiKeys?.Ids?.Any(x => x == item.ApiKey.ApiKeyId) ?? false;
                     });
 
                     await _retryPolicy.ExecuteAsync(async () =>
